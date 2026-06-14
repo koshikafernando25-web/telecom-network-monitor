@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Google Public DNS (Core)",
+        "ip": "8.8.8.8",
+        "type": "External Gateway"
+    },
+    {
+        "name": "Cloudflare DNS (Backup)",
+        "ip": "1.1.1.1",
+        "type": "External Gateway"
+    },
+    {
+        "name": "Local Loopback (Self Test)",
+        "ip": "127.0.0.1",
+        "type": "Internal Loop"
+    }
+]

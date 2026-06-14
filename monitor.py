@@ -1,3 +1,4 @@
+import json
 import os
 import platform
 import subprocess
@@ -7,39 +8,54 @@ def ping_node(ip_address):
     """
     Pings a network node and returns its status and response time.
     """
-    # Determine the correct ping flag based on the operating system
-    # Codespaces runs on Linux, which uses '-c'
     param = '-n' if platform.system().lower() == 'windows' else '-c'
-    
-    # Building the command (sending exactly 1 packet)
     command = ['ping', param, '1', ip_address]
     
-    print(f"📡 Checking connectivity to {ip_address}...")
     start_time = time.time()
-    
-    # Execute the ping command in the background
     response = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    
     end_time = time.time()
     
-    # Calculate round-trip time in milliseconds
     latency = round((end_time - start_time) * 1000, 2)
     
-    # If return code is 0, the ping was successful
     if response.returncode == 0:
         return "ONLINE", latency
     else:
         return "OFFLINE", None
 
+def run_network_audit():
+    # 1. Load targets from the JSON configuration file
+    try:
+        with open('nodes.json', 'r') as file:
+            nodes = json.load(file)
+    except FileNotFoundError:
+        print("❌ Error: nodes.json configuration file not found!")
+        return
+
+    print("==================================================")
+    print(f"📡 STARTING TELECOM NETWORK STATUS AUDIT")
+    print(f"⏰ Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print("==================================================")
+
+    online_count = 0
+    total_nodes = len(nodes)
+
+    # 2. Loop through each node dynamically
+    for node in nodes:
+        print(f"Checking: {node['name']} [{node['ip']}] ({node['type']})...")
+        status, latency = ping_node(node['ip'])
+        
+        if status == "ONLINE":
+            online_count += 1
+            print(f"  └─ Status: 🟢 ONLINE | Latency: {latency} ms\n")
+        else:
+            print(f"  └─ Status: 🔴 OFFLINE | Target Unreachable\n")
+
+    # 3. Print overall health summaries
+    print("==================================================")
+    print(f"📊 AUDIT COMPLETE SUMMARY")
+    print(f"Total Nodes Monitored: {total_nodes}")
+    print(f"Network Availability:  {online_count}/{total_nodes} Nodes Operational")
+    print("==================================================\n")
+
 if __name__ == "__main__":
-    # Test destination: Google's Public DNS (Core Telecom Node)
-    target_ip = "8.8.8.8"
-    
-    status, response_time = ping_node(target_ip)
-    
-    print("\n📊 --- NETWORK NODE STATUS ---")
-    print(f"Target IP: {target_ip}")
-    print(f"Status:    {'🟢 ' + status if status == 'ONLINE' else '🔴 ' + status}")
-    if response_time:
-        print(f"Latency:   {response_time} ms")
-    print("-------------------------------\n")
+    run_network_audit()
