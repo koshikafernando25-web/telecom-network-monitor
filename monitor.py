@@ -1,6 +1,6 @@
 import concurrent.futures
 import json
-import os
+
 import platform
 import subprocess
 import time
